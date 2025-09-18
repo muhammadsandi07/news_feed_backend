@@ -4,6 +4,7 @@ import (
 	"log"
 	"news-feed/internal/domain/user"
 	"news-feed/internal/middleware"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -13,11 +14,17 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println("⚠️ No .env file found, using system env")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system env")
 	}
 
-	dsn := "host=localhost user=sanz password=sanz123 dbname=news_feed_db port=5432 sslmode=disable"
+	// db connection
+	dsn := "host=" + os.Getenv("DB_HOST") +
+		" user=" + os.Getenv("DB_USER") +
+		" password=" + os.Getenv("DB_PASSWORD") +
+		" dbname=" + os.Getenv("DB_NAME") +
+		" port=" + os.Getenv("DB_PORT") +
+		" sslmode=disable"
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
