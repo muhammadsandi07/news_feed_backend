@@ -57,3 +57,27 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		"refresh_token": refresh,
 	})
 }
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+func (h *Handler) Refresh(c *fiber.Ctx) error {
+	var req refreshRequest
+	if err := c.BodyParser(&req); err != nil {
+		return middleware.BadRequest("invalid request body")
+	}
+
+	if err := utils.ValidateStruct(&req); err != nil {
+		return err
+	}
+
+	newAccess, err := h.service.Refresh(req.RefreshToken)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(fiber.Map{
+		"access_token": newAccess,
+	})
+}

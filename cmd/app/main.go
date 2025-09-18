@@ -49,9 +49,9 @@ func main() {
 	api := app.Group("/api")
 	api.Post("/register", userHandler.Register)
 	api.Post("/login", userHandler.Login)
+	api.Post("/refresh", userHandler.Refresh)
 
 	port := ":3000"
 	log.Println("🚀 Server running at http://localhost" + port)
 	log.Fatal(app.Listen(port))
-
 }

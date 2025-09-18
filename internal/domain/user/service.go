@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"news-feed/internal/middleware"
 	"os"
 	"time"
@@ -12,6 +13,7 @@ import (
 type Service interface {
 	Register(username, password string) (*User, error)
 	Login(username, password string) (string, string, error)
+	Refresh(refreshToken string) (string, error)
 }
 
 type service struct {
@@ -71,6 +73,26 @@ func (s *service) Login(username, password string) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
+func (s *service) Refresh(refreshToken string) (string, error) {
+	claims, err := parseToken(refreshToken, os.Getenv("JWT_SECRET"))
+	if err != nil {
+		return "", middleware.Unauthorized("invalid refresh token")
+	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return "", middleware.Unauthorized("invalid refresh token claims")
+	}
+
+	// generate access token baru
+	accessToken, err := generateToken(string(userID), os.Getenv("JWT_SECRET"), time.Minute*15)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
 func generateToken(userID string, secret string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -78,4 +100,21 @@ func generateToken(userID string, secret string, duration time.Duration) (string
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+func parseToken(tokenStr, secret string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("invalid token")
 }
