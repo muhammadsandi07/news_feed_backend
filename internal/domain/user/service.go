@@ -17,11 +17,12 @@ type Service interface {
 }
 
 type service struct {
-	repo Repository
+	repo      Repository
+	jwtSecret string
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo}
+func NewService(repo Repository, jwtSecret string) Service {
+	return &service{repo, jwtSecret}
 }
 
 func (s *service) Register(username, password string) (*User, error) {
@@ -61,11 +62,11 @@ func (s *service) Login(username, password string) (string, string, error) {
 		return "", "", middleware.Unauthorized("invalid credentials")
 	}
 
-	accessToken, err := generateToken(u.ID, os.Getenv("JWT_SECRET"), time.Minute*15)
+	accessToken, err := generateToken(u.ID, s.jwtSecret, time.Minute*15)
 	if err != nil {
 		return "", "", err
 	}
-	refreshToken, err := generateToken(u.ID, os.Getenv("JWT_SECRET"), time.Hour*24*7)
+	refreshToken, err := generateToken(u.ID, s.jwtSecret, time.Hour*24*7)
 	if err != nil {
 		return "", "", err
 	}
@@ -84,8 +85,8 @@ func (s *service) Refresh(refreshToken string) (string, error) {
 		return "", middleware.Unauthorized("invalid refresh token claims")
 	}
 
-	// generate access token baru
-	accessToken, err := generateToken(string(userID), os.Getenv("JWT_SECRET"), time.Minute*15)
+	// generate new access token
+	accessToken, err := generateToken(string(userID), s.jwtSecret, time.Minute*15)
 	if err != nil {
 		return "", err
 	}

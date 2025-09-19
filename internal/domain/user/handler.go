@@ -10,6 +10,8 @@ import (
 
 type Handler struct {
 	service Service
+	// Accept interface return struct
+
 }
 
 func NewHandler(service Service) *Handler {
