@@ -71,6 +71,6 @@ func main() {
 	protected.Delete("/follow/:id", followHandler.Unfollow)
 
 	port := ":3000"
-	log.Println("🚀 Server running at http://localhost" + port)
+	log.Println("Server running at http://localhost" + port)
 	log.Fatal(app.Listen(port))
 }
