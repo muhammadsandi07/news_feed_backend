@@ -3,7 +3,6 @@ package post
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"news-feed/internal/domain/follow"
 	"news-feed/internal/middleware"
@@ -35,8 +34,8 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 		return err
 	}
 
-	userID := c.Locals("user_id").(string)
-	post, err := h.service.Create(string(userID), req.Content)
+	userID := int(c.Locals("user_id").(float64))
+	post, err := h.service.Create(userID, req.Content)
 	if err != nil {
 		return err
 	}
@@ -45,29 +44,24 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetFeed(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(string)
+	userID := int(c.Locals("user_id").(float64))
 
+	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-	cursor := c.Query("cursor", "")
 
-	following, err := h.followService.GetFollowingIDs(string(userID))
+	following, err := h.followService.GetFollowingIDs(userID)
 	if err != nil {
 		return err
 	}
-	following = append(following, string(userID))
-	posts, err := h.service.GetFeed(following, cursor, limit)
+	following = append(following, userID)
+
+	posts, err := h.service.GetFeed(following, page, limit)
 	if err != nil {
 		return err
-	}
-
-	var nextCursor string
-	if len(posts) > 0 {
-		last := posts[len(posts)-1]
-		nextCursor = last.CreatedAt.Format(time.RFC3339)
 	}
 
 	return c.JSON(fiber.Map{
-		"posts":       posts,
-		"next_cursor": nextCursor,
+		"page":  page,
+		"posts": posts,
 	})
 }

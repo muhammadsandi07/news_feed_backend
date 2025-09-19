@@ -53,9 +53,10 @@ func main() {
 
 	app := fiber.New(middleware.NewFiberConfig())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:5173",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		AllowOrigins:     "http://localhost:5173",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
 	}))
 
 	api := app.Group("/api")
@@ -70,7 +71,10 @@ func main() {
 	protected.Post("/follow/:id", followHandler.Follow)
 	protected.Delete("/follow/:id", followHandler.Unfollow)
 
-	port := ":3000"
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = ":3000"
+	}
 	log.Println("Server running at http://localhost" + port)
 	log.Fatal(app.Listen(port))
 }

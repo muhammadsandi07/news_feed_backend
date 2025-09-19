@@ -4,9 +4,9 @@ import "gorm.io/gorm"
 
 type Repository interface {
 	Follow(f *Follow) error
-	Unfollow(followerID, followeeID string) error
-	GetFollowingIDs(followerID string) ([]string, error)
-	IsFollowing(followerID, followeeID string) (bool, error)
+	Unfollow(followerID, followeeID int) error
+	GetFollowingIDs(followerID int) ([]int, error)
+	IsFollowing(followerID, followeeID int) (bool, error)
 }
 
 type repository struct {
@@ -21,19 +21,19 @@ func (r *repository) Follow(f *Follow) error {
 	return r.db.Create(f).Error
 }
 
-func (r *repository) Unfollow(followerID, followeeID string) error {
+func (r *repository) Unfollow(followerID, followeeID int) error {
 	return r.db.Where("follower_id = ? AND followee_id = ?", followerID, followeeID).Delete(&Follow{}).Error
 }
 
-func (r *repository) GetFollowingIDs(followerID string) ([]string, error) {
-	var ids []string
+func (r *repository) GetFollowingIDs(followerID int) ([]int, error) {
+	var ids []int
 	err := r.db.Model(&Follow{}).
 		Where("follower_id = ?", followerID).
 		Pluck("followee_id", &ids).Error
 	return ids, err
 }
 
-func (r *repository) IsFollowing(followerID, followeeID string) (bool, error) {
+func (r *repository) IsFollowing(followerID, followeeID int) (bool, error) {
 	var count int64
 	err := r.db.Model(&Follow{}).
 		Where("follower_id = ? AND followee_id = ?", followerID, followeeID).

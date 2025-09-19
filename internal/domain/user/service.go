@@ -80,13 +80,13 @@ func (s *service) Refresh(refreshToken string) (string, error) {
 		return "", middleware.Unauthorized("invalid refresh token")
 	}
 
-	userID, ok := claims["user_id"].(string)
+	userID, ok := claims["user_id"].(int)
 	if !ok {
 		return "", middleware.Unauthorized("invalid refresh token claims")
 	}
 
 	// generate new access token
-	accessToken, err := generateToken(string(userID), s.jwtSecret, time.Minute*15)
+	accessToken, err := generateToken(userID, s.jwtSecret, time.Minute*15)
 	if err != nil {
 		return "", err
 	}
@@ -94,7 +94,7 @@ func (s *service) Refresh(refreshToken string) (string, error) {
 	return accessToken, nil
 }
 
-func generateToken(userID string, secret string, duration time.Duration) (string, error) {
+func generateToken(userID int, secret string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(duration).Unix(),
