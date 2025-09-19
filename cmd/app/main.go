@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"news-feed/internal/config"
+	"news-feed/internal/domain/post"
 	"news-feed/internal/domain/user"
 	"news-feed/internal/middleware"
 	"os"
@@ -17,6 +19,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system env")
 	}
+	cfg := config.LoadConfig()
 
 	// db connection
 	dsn := "host=" + os.Getenv("DB_HOST") +
@@ -36,8 +39,12 @@ func main() {
 	}
 
 	userRepo := user.NewRepository(db)
-	userService := user.NewService(userRepo)
+	userService := user.NewService(userRepo, cfg.JWTSecret)
 	userHandler := user.NewHandler(userService)
+
+	postRepo := post.NewRepository(db)
+	postService := post.NewService(postRepo)
+	postHandler := post.NewHandler(postService)
 
 	app := fiber.New(middleware.NewFiberConfig())
 	app.Use(cors.New(cors.Config{
@@ -50,6 +57,10 @@ func main() {
 	api.Post("/register", userHandler.Register)
 	api.Post("/login", userHandler.Login)
 	api.Post("/refresh", userHandler.Refresh)
+
+	protected := api.Group("/api", middleware.JWTProtected())
+	protected.Post("/posts", postHandler.CreatePost)
+	protected.Get("/feed", postHandler.GetFeed)
 
 	port := ":3000"
 	log.Println("🚀 Server running at http://localhost" + port)
