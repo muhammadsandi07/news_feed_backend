@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"news-feed/internal/config"
+	"news-feed/internal/domain/follow"
 	"news-feed/internal/domain/post"
 	"news-feed/internal/domain/user"
 	"news-feed/internal/middleware"
@@ -46,6 +47,10 @@ func main() {
 	postService := post.NewService(postRepo)
 	postHandler := post.NewHandler(postService)
 
+	followRepo := follow.NewRepository(db)
+	followService := follow.NewService(followRepo)
+	followHandler := follow.NewHandler(followService)
+
 	app := fiber.New(middleware.NewFiberConfig())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:5173",
@@ -61,6 +66,9 @@ func main() {
 	protected := api.Group("/api", middleware.JWTProtected())
 	protected.Post("/posts", postHandler.CreatePost)
 	protected.Get("/feed", postHandler.GetFeed)
+
+	protected.Post("/follow/:id", followHandler.Follow)
+	protected.Delete("/follow/:id", followHandler.Unfollow)
 
 	port := ":3000"
 	log.Println("🚀 Server running at http://localhost" + port)
