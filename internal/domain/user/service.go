@@ -3,7 +3,6 @@ package user
 import (
 	"fmt"
 	"news-feed/internal/middleware"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -17,12 +16,14 @@ type Service interface {
 }
 
 type service struct {
-	repo      Repository
-	jwtSecret string
+	repo            Repository
+	jwtSecret       string
+	AccessExpireMin int
+	RefreshExpireHr int
 }
 
-func NewService(repo Repository, jwtSecret string) Service {
-	return &service{repo, jwtSecret}
+func NewService(repo Repository, jwtSecret string, AccessExpireMin, RefreshExpireHr int) Service {
+	return &service{repo, jwtSecret, AccessExpireMin, RefreshExpireHr}
 }
 
 func (s *service) Register(username, password string) (*User, error) {
@@ -62,11 +63,11 @@ func (s *service) Login(username, password string) (string, string, error) {
 		return "", "", middleware.Unauthorized("invalid credentials")
 	}
 
-	accessToken, err := generateToken(u.ID, s.jwtSecret, time.Minute*15)
+	accessToken, err := generateToken(u.ID, s.jwtSecret, time.Minute*time.Duration(s.AccessExpireMin))
 	if err != nil {
 		return "", "", err
 	}
-	refreshToken, err := generateToken(u.ID, s.jwtSecret, time.Hour*24*7)
+	refreshToken, err := generateToken(u.ID, s.jwtSecret, time.Hour*24*time.Duration(s.RefreshExpireHr))
 	if err != nil {
 		return "", "", err
 	}
@@ -75,7 +76,7 @@ func (s *service) Login(username, password string) (string, string, error) {
 }
 
 func (s *service) Refresh(refreshToken string) (string, error) {
-	claims, err := parseToken(refreshToken, os.Getenv("JWT_SECRET"))
+	claims, err := parseToken(refreshToken, s.jwtSecret)
 	if err != nil {
 		return "", middleware.Unauthorized("invalid refresh token")
 	}
@@ -85,8 +86,7 @@ func (s *service) Refresh(refreshToken string) (string, error) {
 		return "", middleware.Unauthorized("invalid refresh token claims")
 	}
 
-	// generate new access token
-	accessToken, err := generateToken(userID, s.jwtSecret, time.Minute*15)
+	accessToken, err := generateToken(userID, s.jwtSecret, time.Minute*time.Duration(s.AccessExpireMin))
 	if err != nil {
 		return "", err
 	}
