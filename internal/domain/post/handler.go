@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"news-feed/internal/domain/follow"
 	"news-feed/internal/middleware"
 	"news-feed/internal/utils"
 
@@ -12,11 +13,12 @@ import (
 )
 
 type Handler struct {
-	service Service
+	service       Service
+	followService follow.Service
 }
 
-func NewHandler(s Service) *Handler {
-	return &Handler{s}
+func NewHandler(s Service, f follow.Service) *Handler {
+	return &Handler{s, f}
 }
 
 type createPostRequest struct {
@@ -33,8 +35,8 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 		return err
 	}
 
-	userID := c.Locals("user_id").(float64) // jwt float64
-	post, err := h.service.Create(uint(userID), req.Content)
+	userID := c.Locals("user_id").(string)
+	post, err := h.service.Create(string(userID), req.Content)
 	if err != nil {
 		return err
 	}
@@ -43,16 +45,16 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetFeed(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(float64)
+	userID := c.Locals("user_id").(string)
 
-	// ambil pagination
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	cursor := c.Query("cursor", "")
 
-	// ambil user yang di-follow + dirinya sendiri
-	following := []uint{uint(userID)}
-	// TODO: integrate dengan follow repository (sementara dummy dulu)
-
+	following, err := h.followService.GetFollowingIDs(string(userID))
+	if err != nil {
+		return err
+	}
+	following = append(following, string(userID))
 	posts, err := h.service.GetFeed(following, cursor, limit)
 	if err != nil {
 		return err

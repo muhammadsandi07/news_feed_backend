@@ -3,7 +3,7 @@ package follow
 import "time"
 
 type Follow struct {
-	FollowerID uint      `gorm:"primaryKey"`
-	FolloweeID uint      `gorm:"primaryKey"`
+	FollowerID string    `gorm:"primaryKey"`
+	FolloweeID string    `gorm:"primaryKey"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`
 }

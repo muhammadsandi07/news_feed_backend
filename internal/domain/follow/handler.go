@@ -15,13 +15,13 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) Follow(c *fiber.Ctx) error {
-	userID := uint(c.Locals("user_id").(float64))
+	userID := string(c.Locals("user_id").(string))
 	targetID, err := c.ParamsInt("id")
 	if err != nil {
 		return middleware.BadRequest("invalid user id")
 	}
 
-	if err := h.service.FollowUser(userID, uint(targetID)); err != nil {
+	if err := h.service.FollowUser(userID, string(targetID)); err != nil {
 		return err
 	}
 
@@ -29,13 +29,13 @@ func (h *Handler) Follow(c *fiber.Ctx) error {
 }
 
 func (h *Handler) Unfollow(c *fiber.Ctx) error {
-	userID := uint(c.Locals("user_id").(float64))
+	userID := string(c.Locals("user_id").(string))
 	targetID, err := c.ParamsInt("id")
 	if err != nil {
 		return middleware.BadRequest("invalid user id")
 	}
 
-	if err := h.service.UnfollowUser(userID, uint(targetID)); err != nil {
+	if err := h.service.UnfollowUser(userID, string(targetID)); err != nil {
 		return err
 	}
 

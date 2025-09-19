@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Repository interface {
 	Create(post *Post) error
-	GetFeed(userIDs []uint, cursor string, limit int) ([]Post, error)
+	GetFeed(userIDs []string, cursor string, limit int) ([]Post, error)
 }
 
 type repository struct {
@@ -19,7 +19,7 @@ func (r *repository) Create(post *Post) error {
 	return r.db.Create(post).Error
 }
 
-func (r *repository) GetFeed(userIDs []uint, cursor string, limit int) ([]Post, error) {
+func (r *repository) GetFeed(userIDs []string, cursor string, limit int) ([]Post, error) {
 	var posts []Post
 
 	q := r.db.Where("user_id IN ?", userIDs)

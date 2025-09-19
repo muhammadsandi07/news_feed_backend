@@ -43,13 +43,13 @@ func main() {
 	userService := user.NewService(userRepo, cfg.JWTSecret)
 	userHandler := user.NewHandler(userService)
 
-	postRepo := post.NewRepository(db)
-	postService := post.NewService(postRepo)
-	postHandler := post.NewHandler(postService)
-
 	followRepo := follow.NewRepository(db)
 	followService := follow.NewService(followRepo)
 	followHandler := follow.NewHandler(followService)
+
+	postRepo := post.NewRepository(db)
+	postService := post.NewService(postRepo)
+	postHandler := post.NewHandler(postService, followService)
 
 	app := fiber.New(middleware.NewFiberConfig())
 	app.Use(cors.New(cors.Config{

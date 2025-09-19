@@ -3,9 +3,9 @@ package follow
 import "news-feed/internal/middleware"
 
 type Service interface {
-	FollowUser(followerID, followeeID uint) error
-	UnfollowUser(followerID, followeeID uint) error
-	GetFollowingIDs(followerID uint) ([]uint, error)
+	FollowUser(followerID, followeeID string) error
+	UnfollowUser(followerID, followeeID string) error
+	GetFollowingIDs(followerID string) ([]string, error)
 }
 
 type service struct {
@@ -16,7 +16,7 @@ func NewService(repo Repository) Service {
 	return &service{repo}
 }
 
-func (s *service) FollowUser(followerID, followeeID uint) error {
+func (s *service) FollowUser(followerID, followeeID string) error {
 	if followerID == followeeID {
 		return middleware.BadRequest("cannot follow yourself")
 	}
@@ -35,10 +35,10 @@ func (s *service) FollowUser(followerID, followeeID uint) error {
 	})
 }
 
-func (s *service) UnfollowUser(followerID, followeeID uint) error {
+func (s *service) UnfollowUser(followerID, followeeID string) error {
 	return s.repo.Unfollow(followerID, followeeID)
 }
 
-func (s *service) GetFollowingIDs(followerID uint) ([]uint, error) {
+func (s *service) GetFollowingIDs(followerID string) ([]string, error) {
 	return s.repo.GetFollowingIDs(followerID)
 }

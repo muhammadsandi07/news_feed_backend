@@ -5,8 +5,8 @@ import (
 )
 
 type Service interface {
-	Create(userID uint, content string) (*Post, error)
-	GetFeed(following []uint, cursor string, limit int) ([]Post, error)
+	Create(userID string, content string) (*Post, error)
+	GetFeed(following []string, cursor string, limit int) ([]Post, error)
 }
 
 type service struct {
@@ -17,7 +17,7 @@ func NewService(repo Repository) Service {
 	return &service{repo}
 }
 
-func (s *service) Create(userID uint, content string) (*Post, error) {
+func (s *service) Create(userID string, content string) (*Post, error) {
 	if len(content) == 0 {
 		return nil, middleware.BadRequest("content cannot be empty")
 	}
@@ -36,7 +36,7 @@ func (s *service) Create(userID uint, content string) (*Post, error) {
 	return p, nil
 }
 
-func (s *service) GetFeed(following []uint, cursor string, limit int) ([]Post, error) {
+func (s *service) GetFeed(following []string, cursor string, limit int) ([]Post, error) {
 	if len(following) == 0 {
 		return []Post{}, nil
 	}
