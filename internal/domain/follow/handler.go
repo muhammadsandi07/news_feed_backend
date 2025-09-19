@@ -16,12 +16,13 @@ func NewHandler(s Service) *Handler {
 
 func (h *Handler) Follow(c *fiber.Ctx) error {
 	userID := string(c.Locals("user_id").(string))
-	targetID, err := c.ParamsInt("id")
-	if err != nil {
+	targetID := c.Params("id")
+
+	if targetID == "" {
 		return middleware.BadRequest("invalid user id")
 	}
 
-	if err := h.service.FollowUser(userID, string(targetID)); err != nil {
+	if err := h.service.FollowUser(userID, targetID); err != nil {
 		return err
 	}
 
